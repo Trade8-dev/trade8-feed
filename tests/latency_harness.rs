@@ -16,7 +16,7 @@ use std::time::Instant;
 
 use trade8::feed_adapters::{build_itch_bbo, RawQuotePacket};
 
-use trade8_feed::core::FeedEngine;
+use trade8_feed_server::core::FeedEngine;
 
 const N: usize = 50_000;
 
