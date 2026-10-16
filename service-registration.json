@@ -2,7 +2,11 @@
   "vertical": "trade8",
   "services": [
     {
-      "service_type": "trade8:feed"
+      "service_type": "trade8:feed",
+      "telemetry_property": {
+        "slug": "feed",
+        "name": "Trade8:Feed Telemetry"
+      }
     }
   ]
 }
