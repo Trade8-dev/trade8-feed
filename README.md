@@ -53,10 +53,10 @@ graph TD
     subgraph feed[Trade8:Feed process]
         SUP[link supervisor tasks<br/>bounded mpsc + backoff] --> ADT[adapters]
         ADT -- RawQuotePacket --> NORM[engine: parse_itch_record → internal events]
-        NORM --> ST[(per-symbol state:<br/>per-source BBO, depth, prints, imbalance)]
+        NORM --> ST["(per-symbol state:<br/>per-source BBO, depth, prints, imbalance)"]
         ST -- consolidated --> SNAP[quote/depth snapshot API]
-        ST -- frames --> SSE[/v1/stream/{symbol} SSE<br/>snapshot + live frames/]
-        NORM --> AL[alert rules eval] --> AP[(alert rows + events)]
+        ST -- frames --> SSE["/v1/stream/{symbol} SSE<br/>snapshot + live frames/"]
+        NORM --> AL[alert rules eval] --> AP["(alert rows + events)"]
         NORM -- outbox rows per event --> OB[feed.outbox]
     end
     IT --> SUP

@@ -36,13 +36,13 @@ graph TD
         SUP[supervisor + normalizer]
         ENG[FeedEngine: consolidated state + alerts]
         ST[store.rs + outbox]
-        SSE[/v1/stream/{symbol} SSE/]
+        SSE["/v1/stream/{symbol} SSE/"]
     end
     subgraph platform[sentin8 platform]
         BUS[sentin8:bus]
         AUTH[sentin8:auth + Shield]
         SYS[sentin8:sys]
-        DB[(db trade8 / schema feed)]
+        DB["(db trade8 / schema feed)"]
         FUNC[sentin8:func on_quote trigger]
     end
     subgraph consumers[downstream]
@@ -149,7 +149,7 @@ sequenceDiagram
     alt alert fired
         N->>DB: persist_fired_alert (ack trail)
     end
-    Note over AD,N: adapter ends → status row + backoff; supervisor restarts with backoff (cap 30s)
+    Note over AD,O: adapter ends → status row + backoff, supervisor restarts with backoff (cap 30s)
 ```
 
 ## 3. Data Model
@@ -267,7 +267,7 @@ Plus the shared Shield policy-admin API block.
 ```mermaid
 flowchart TD
     A[adapter packet] --> B{parse ok?}
-    B -- no --> C[codec gap → drop + warn (health sees seq stall)]
+    B -- no --> C["codec gap → drop + warn (health sees seq stall)"]
     B -- yes --> D[engine ingest]
     D --> E{DB conn available?}
     E -- no --> F[events still fan out via SSE; outbox retry next packet]
@@ -333,8 +333,8 @@ graph LR
 ```mermaid
 graph TD
     U[Unit: consolidated BBO, alert matches, depth sort, ITCH record parsing] --> DB[tests/sql_matrix.rs: link enable-flag gate, alert rule→fired→ack lifecycle, RLS matrix]
-    U --> G[Golden: feed-adapters fixture tests (sim frames, ITCH bytes, WS framing)]
-    DB --> E2[e2e-ts: triggers spec (quote → price-alerts hook; flatten → flexible-flat)]
+    U --> G["Golden: feed-adapters fixture tests (sim frames, ITCH bytes, WS framing)"]
+    DB --> E2["e2e-ts: triggers spec (quote → price-alerts hook; flatten → flexible-flat)"]
 ```
 
 - Unit: `SymbolQuotes::consolidated_bbo` (multi-source merge), alert
