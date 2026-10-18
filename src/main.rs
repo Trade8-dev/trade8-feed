@@ -15,6 +15,7 @@
 
 mod admin_ui;
 mod core;
+mod openapi;
 mod registration;
 mod store;
 
@@ -104,8 +105,19 @@ fn extend_router(app: Router<Arc<FeedState>>, _state: Arc<FeedState>) -> Router<
             get(|| async { Json(serde_json::json!({"status": "ok", "service": "trade8:feed", "version": sentin8::build_info::id(), "build": sentin8::build_info::build_hash()})) }),
         )
 }
+#[utoipa::path(
+    get,
+    path = "/v1/quotes/{symbol}",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "feed",
+)]
 
-async fn quote(
+pub(crate) async fn quote(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
     Path(symbol): Path<String>,
@@ -142,11 +154,22 @@ async fn depth(
         None => Err((axum::http::StatusCode::NOT_FOUND, "no depth".into())),
     }
 }
+#[utoipa::path(
+    get,
+    path = "/v1/stream/{symbol}",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "feed",
+)]
 
 /// SSE quote stream: `text/event-stream` frames carrying
 /// `trade8:feed:quote:updated`-shaped payloads. Entitlement scope is
 /// enforced at subscribe time (subscription-time reject).
-async fn sse_symbol(
+pub(crate) async fn sse_symbol(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
     Path(symbol): Path<String>,
@@ -184,8 +207,19 @@ async fn sse_symbol(
     };
     Ok(Sse::new(stream).keep_alive(KeepAlive::default()))
 }
+#[utoipa::path(
+    get,
+    path = "/v1/alerts",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "feed",
+)]
 
-async fn list_alerts(
+pub(crate) async fn list_alerts(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
@@ -264,9 +298,20 @@ async fn create_alert(
     tx.commit().await.ok(); // dropping an uncommitted tx rolls back
     Ok(Json(serde_json::json!({"status": "ok"})))
 }
+#[utoipa::path(
+    get,
+    path = "/v1/feeds",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "feed",
+)]
 
 /// Feed links from the DB (the wall's config load).
-async fn list_feeds(
+pub(crate) async fn list_feeds(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {

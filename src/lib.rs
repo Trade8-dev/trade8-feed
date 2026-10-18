@@ -9,5 +9,6 @@
 //! they need `FeedState` which is bin-local.
 
 pub mod core;
+pub mod openapi;
 pub mod registration;
 pub mod store;

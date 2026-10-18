@@ -57,6 +57,17 @@ fn card(title: &str, body: &str) -> RemoteWidget {
         actions: vec![],
     })
 }
+#[utoipa::path(
+    get,
+    path = "/v1/admin/ui/{page}",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "trade8-admin",
+)]
 
 /// `GET /v1/admin/ui/{page}` — RFW definitions.
 pub async fn get_admin_ui(
@@ -126,6 +137,17 @@ pub async fn get_admin_ui(
 }
 
 type Qp = std::collections::HashMap<String, String>;
+#[utoipa::path(
+    get,
+    path = "/v1/admin/feeds",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "trade8-admin",
+)]
 
 /// `GET /v1/admin/feeds` — link rows.
 pub async fn admin_feeds(
@@ -167,6 +189,17 @@ pub async fn admin_feeds(
         })
         .collect::<Vec<_>>())))
 }
+#[utoipa::path(
+    get,
+    path = "/v1/admin/sources",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "trade8-admin",
+)]
 
 /// `GET /v1/admin/sources` — quote source rows.
 pub async fn admin_sources(
@@ -207,6 +240,17 @@ pub async fn admin_sources(
         })
         .collect::<Vec<_>>())))
 }
+#[utoipa::path(
+    get,
+    path = "/v1/admin/alerts",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "trade8-admin",
+)]
 
 /// `GET /v1/admin/alerts` — fired alerts (latest first).
 pub async fn admin_alerts(
@@ -266,6 +310,17 @@ pub async fn admin_alerts(
         )
         .collect::<Vec<_>>())))
 }
+#[utoipa::path(
+    get,
+    path = "/v1/admin/alerts/{id}/ack",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "trade8-admin",
+)]
 
 /// `POST /v1/admin/alerts/{id}/ack` — RFW POST-alias ack.
 pub async fn admin_ack_alert(
