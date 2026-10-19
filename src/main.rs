@@ -15,6 +15,7 @@
 
 mod admin_ui;
 mod core;
+mod dtos;
 mod openapi;
 mod registration;
 mod store;
@@ -105,11 +106,13 @@ fn extend_router(app: Router<Arc<FeedState>>, _state: Arc<FeedState>) -> Router<
             get(|| async { Json(serde_json::json!({"status": "ok", "service": "trade8:feed", "version": sentin8::build_info::id(), "build": sentin8::build_info::build_hash()})) }),
         )
 }
+use crate::dtos::*;
+
 #[utoipa::path(
     get,
     path = "/v1/quotes/{symbol}",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Quote snapshot", body = trade8::contracts::QuoteUpdate),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -121,7 +124,7 @@ pub(crate) async fn quote(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
     Path(symbol): Path<String>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<trade8::contracts::QuoteUpdate>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -131,7 +134,7 @@ pub(crate) async fn quote(
     )
     .await?;
     match st.engine.quote_snapshot(&symbol) {
-        Some(q) => Ok(Json(serde_json::to_value(q).unwrap_or_default())),
+        Some(q) => Ok(Json(q)),
         None => Err((axum::http::StatusCode::NOT_FOUND, "no quote".into())),
     }
 }
@@ -140,7 +143,7 @@ async fn depth(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
     Path(symbol): Path<String>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<DepthResponse>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -150,7 +153,18 @@ async fn depth(
     )
     .await?;
     match st.engine.depth_snapshot(&symbol, 10) {
-        Some((bids, asks)) => Ok(Json(serde_json::json!({"bids": bids, "asks": asks}))),
+        Some((bids, asks)) => Ok(Json(DepthResponse {
+            bids: Some(
+                bids.iter()
+                    .map(|(px, q)| vec![serde_json::json!(px.to_string()), serde_json::json!(q)])
+                    .collect(),
+            ),
+            asks: Some(
+                asks.iter()
+                    .map(|(px, q)| vec![serde_json::json!(px.to_string()), serde_json::json!(q)])
+                    .collect(),
+            ),
+        })),
         None => Err((axum::http::StatusCode::NOT_FOUND, "no depth".into())),
     }
 }
@@ -158,7 +172,7 @@ async fn depth(
     get,
     path = "/v1/stream/{symbol}",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Quotation stream (text/event-stream)", content_type = "text/event-stream", body = String,),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -211,7 +225,7 @@ pub(crate) async fn sse_symbol(
     get,
     path = "/v1/alerts",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Alert rules", body = AlertRulesResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -222,7 +236,7 @@ pub(crate) async fn sse_symbol(
 pub(crate) async fn list_alerts(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<AlertRulesResponse>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -232,19 +246,24 @@ pub(crate) async fn list_alerts(
     )
     .await?;
     let rules = st.engine.alert_rules.read();
-    Ok(Json(serde_json::json!({
-        "rules": rules.iter().map(|r| serde_json::json!({
-            "rule_id": r.rule_id, "usr_id": r.usr_id,
-            "symbol": r.symbol_name, "condition": r.describe(),
-        })).collect::<Vec<_>>()
-    })))
+    Ok(Json(AlertRulesResponse {
+        rules: rules
+            .iter()
+            .map(|r| AlertRuleRow {
+                rule_id: r.rule_id,
+                usr_id: r.usr_id.clone(),
+                symbol: r.symbol_name.clone(),
+                condition: r.describe(),
+            })
+            .collect(),
+    }))
 }
 
 async fn create_alert(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
-    Json(body): Json<serde_json::Value>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+    Json(body): Json<CreateAlertRequest>,
+) -> Result<Json<AckResponse>, (axum::http::StatusCode, String)> {
     let auth = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -254,19 +273,12 @@ async fn create_alert(
     )
     .await?;
     let env = auth.env_id();
-    let symbol = body.get("symbol").and_then(|v| v.as_str()).ok_or((
-        axum::http::StatusCode::BAD_REQUEST,
-        "symbol required".into(),
-    ))?;
-    let op = body
-        .get("op")
-        .and_then(|v| v.as_str())
-        .unwrap_or("gt")
-        .to_string();
-    let threshold = body.get("threshold_raw").and_then(|v| v.as_i64()).ok_or((
-        axum::http::StatusCode::BAD_REQUEST,
-        "threshold_raw required".into(),
-    ))?;
+    let symbol = body.symbol.as_str();
+    let op = body.op.unwrap_or_else(|| "gt".into());
+    let threshold = body
+        .threshold_raw
+        .parse::<i64>()
+        .map_err(|_| (axum::http::StatusCode::BAD_REQUEST, "threshold_raw invalid".into()))?;
     let rule = core::AlertRule {
         rule_id: uuid::Uuid::now_v7(),
         usr_id: auth.claims.sub.clone(),
@@ -296,13 +308,15 @@ async fn create_alert(
         .map_err(sentin8::shell::err_db)?;
     st.engine.add_alert_rule(rule);
     tx.commit().await.ok(); // dropping an uncommitted tx rolls back
-    Ok(Json(serde_json::json!({"status": "ok"})))
+    Ok(Json(AckResponse {
+        status: "ok".into(),
+    }))
 }
 #[utoipa::path(
     get,
     path = "/v1/feeds",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Feed links", body = FeedLinksResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -314,7 +328,7 @@ async fn create_alert(
 pub(crate) async fn list_feeds(
     State(st): State<Arc<FeedState>>,
     headers: axum::http::HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<FeedLinksResponse>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -342,7 +356,9 @@ pub(crate) async fn list_feeds(
     };
     let links = store::bootstrap_links(&mut tx, env).await;
     tx.commit().await.ok(); // dropping an uncommitted tx rolls back
-    Ok(Json(serde_json::json!({"feeds": links})))
+    Ok(Json(FeedLinksResponse {
+        feeds: links,
+    }))
 }
 
 /// The link-supervisor ingestion loop: per-link adapter task

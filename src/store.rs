@@ -13,7 +13,7 @@ use uuid::Uuid;
 use crate::core::AlertRule;
 
 /// Feed link config row (the link supervisor's boot input).
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, utoipa::ToSchema)]
 pub struct FeedLinkRow {
     pub link_id: Uuid,
     pub kind: String,

@@ -5,6 +5,7 @@
 
 //! Trade8:Feed admin UI - RFW pages + data endpoints.
 
+use crate::AckResponse;
 use axum::extract::{Path, Query, State};
 use axum::http::HeaderMap;
 use axum::Json;
@@ -61,7 +62,7 @@ fn card(title: &str, body: &str) -> RemoteWidget {
     get,
     path = "/v1/admin/ui/{page}",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "OK", body = sentin8::rfw::AdminUiResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -74,7 +75,7 @@ pub async fn get_admin_ui(
     State(_st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
     Path(page): Path<String>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<AdminUiResponse>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&_st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &_st.core.admin.policy,
@@ -132,7 +133,7 @@ pub async fn get_admin_ui(
         }
     };
     Ok(Json(
-        serde_json::to_value(AdminUiResponse::page(def)).unwrap_or_default(),
+        AdminUiResponse::page(def)
     ))
 }
 
@@ -141,7 +142,7 @@ type Qp = std::collections::HashMap<String, String>;
     get,
     path = "/v1/admin/feeds",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -153,7 +154,7 @@ type Qp = std::collections::HashMap<String, String>;
 pub async fn admin_feeds(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -178,7 +179,7 @@ pub async fn admin_feeds(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(serde_json::json!(rows
+    Ok(Json(rows
         .into_iter()
         .map(|(link_id, kind, name, quote_source_id, gtob, enable)| {
             serde_json::json!({
@@ -187,13 +188,13 @@ pub async fn admin_feeds(
                 "generate_top_of_book": gtob, "enable": enable,
             })
         })
-        .collect::<Vec<_>>())))
+        .collect::<Vec<_>>()))
 }
 #[utoipa::path(
     get,
     path = "/v1/admin/sources",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -205,7 +206,7 @@ pub async fn admin_feeds(
 pub async fn admin_sources(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -230,7 +231,7 @@ pub async fn admin_sources(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(serde_json::json!(rows
+    Ok(Json(rows
         .into_iter()
         .map(|(name, display_name, is_book, create_tos)| {
             serde_json::json!({
@@ -238,13 +239,13 @@ pub async fn admin_sources(
                 "is_book": is_book, "create_tos": create_tos,
             })
         })
-        .collect::<Vec<_>>())))
+        .collect::<Vec<_>>()))
 }
 #[utoipa::path(
     get,
     path = "/v1/admin/alerts",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -257,7 +258,7 @@ pub async fn admin_alerts(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
     Query(q): Query<Qp>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -297,7 +298,7 @@ pub async fn admin_alerts(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(serde_json::json!(rows
+    Ok(Json(rows
         .into_iter()
         .map(
             |(alert_id, symbol_name, condition_text, usr_id, at, ack_by)| {
@@ -308,13 +309,13 @@ pub async fn admin_alerts(
                 })
             }
         )
-        .collect::<Vec<_>>())))
+        .collect::<Vec<_>>()))
 }
 #[utoipa::path(
     get,
     path = "/v1/admin/alerts/{id}/ack",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Alert acked", body = AckResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -327,7 +328,7 @@ pub async fn admin_ack_alert(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
     Path(id): Path<uuid::Uuid>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<AckResponse>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -348,7 +349,9 @@ pub async fn admin_ack_alert(
         .await
         .map_err(sentin8::shell::err_db)?;
     if ok {
-        Ok(Json(serde_json::json!({"status": "acked"})))
+        Ok(Json(AckResponse {
+        status: "acked".into(),
+    }))
     } else {
         Err((
             axum::http::StatusCode::NOT_FOUND,

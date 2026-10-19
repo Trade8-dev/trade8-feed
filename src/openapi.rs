@@ -19,7 +19,7 @@ pub mod w {
         get,
         path = "/v1/quotes/{symbol}",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = trade8::contracts::QuoteUpdate),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -32,7 +32,7 @@ pub mod w {
         get,
         path = "/v1/depth/{symbol}",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = crate::dtos::DepthResponse),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -45,7 +45,7 @@ pub mod w {
         get,
         path = "/v1/alerts",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = crate::dtos::AlertRulesResponse),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -57,8 +57,9 @@ pub mod w {
     #[utoipa::path(
         post,
         path = "/v1/alerts",
+        request_body = crate::dtos::CreateAlertRequest,
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "Alert created", body = crate::dtos::AckResponse),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -71,7 +72,7 @@ pub mod w {
         get,
         path = "/v1/feeds",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = crate::dtos::FeedLinksResponse),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -84,7 +85,7 @@ pub mod w {
         get,
         path = "/v1/stream/{symbol}",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "Quotation stream", content_type = "text/event-stream", body = String, ),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -97,7 +98,7 @@ pub mod w {
         get,
         path = "/v1/admin/ui/{page}",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = sentin8::rfw::AdminUiResponse),
             (status = 404, description = "Unknown page"),
         ),
         security(),
@@ -110,7 +111,7 @@ pub mod w {
         get,
         path = "/v1/admin/feeds",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = Vec<serde_json::Value>),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -123,7 +124,7 @@ pub mod w {
         get,
         path = "/v1/admin/sources",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = Vec<serde_json::Value>),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -136,7 +137,7 @@ pub mod w {
         get,
         path = "/v1/admin/alerts",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = Vec<serde_json::Value>),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -149,7 +150,7 @@ pub mod w {
         get,
         path = "/v1/admin/alerts/{id}/ack",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = crate::dtos::AckResponse),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -164,7 +165,7 @@ pub mod w {
         post,
         path = "/v1/admin/alerts/{id}/ack",
         responses(
-            (status = 200, description = "OK", body = serde_json::Value),
+            (status = 200, description = "OK", body = crate::dtos::AckResponse),
             (status = 403, description = "Forbidden"),
         ),
         security(),
@@ -177,7 +178,7 @@ pub mod w {
         get,
         path = "/v1/health",
         responses(
-            (status = 200, description = "Service is healthy", body = serde_json::Value),
+            (status = 200, description = "Service is healthy", body = crate::dtos::HealthInfo),
         ),
         security(),
         tag = "feed",
@@ -218,7 +219,22 @@ pub mod w {
         sentin8::shell::policy_put_attribute,
         sentin8::shell::policy_delete_attribute,
     ),
-    components(schemas()),
+    components(schemas(
+        crate::dtos::HealthInfo,
+        crate::dtos::DepthResponse,
+        crate::dtos::AlertRuleRow,
+        crate::dtos::AlertRulesResponse,
+        crate::dtos::CreateAlertRequest,
+        crate::dtos::AckResponse,
+        crate::dtos::FeedLinksResponse,
+        trade8::contracts::QuoteUpdate,
+        trade8::contracts::Price,
+        trade8::contracts::Qty,
+        trade8::contracts::Bar,
+        trade8::contracts::BarInterval,
+        crate::store::FeedLinkRow,
+        sentin8::rfw::AdminUiResponse,
+    )),
     security(),
     tags(
         (name = "feed", description = "Trade8:Feed - market data + alerts"),
