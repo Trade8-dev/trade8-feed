@@ -1,4 +1,4 @@
-# Trade8:Feed — Detailed Design Document
+# Trade8:Feed - Detailed Design Document
 
 > Audience: maintainers, reviewers, and architects modifying the service.
 > Overview in `README.md`; business functionality in `BUSINESS.md`.
@@ -25,7 +25,7 @@
 
 ```mermaid
 graph TD
-    subgraph vendors[vendors — untrusted outside TLS]
+    subgraph vendors[vendors - untrusted outside TLS]
         V1[ITCH / SoupTCP]
         V2[IDC]
         V3[crypto WS]
@@ -88,7 +88,7 @@ graph TD
     end
 ```
 
-### Request lifecycle — snapshot read family
+### Request lifecycle - snapshot read family
 
 ```mermaid
 sequenceDiagram
@@ -104,7 +104,7 @@ sequenceDiagram
     H-->>A: BBO JSON {bid, ask, sizes, ts} or depth ladder
 ```
 
-### Subscription lifecycle — SSE stream family
+### Subscription lifecycle - SSE stream family
 
 ```mermaid
 sequenceDiagram
@@ -203,9 +203,9 @@ erDiagram
     alert_rule ||--o{ alert : "fired"
 ```
 
-- `alert_rule.condition` — JSONB `{op, threshold, window_ms?}` (declarative
+- `alert_rule.condition` - JSONB `{op, threshold, window_ms?}` (declarative
   conditions; engine matches on the rule's typed copy).
-- `alert.ack_by/ack_at` — the acknowledge trail (admin page acks).
+- `alert.ack_by/ack_at` - the acknowledge trail (admin page acks).
 - No secret columns: `credentials_ref` references the platform secret store.
 
 ## 4. API Surface
@@ -246,20 +246,20 @@ Plus the shared Shield policy-admin API block.
 
 ## 5. Cross-Cutting Concerns
 
-- **AuthN/AuthZ** — 8-step pipeline; Shield targets per data type
-  (L1 vs L2 vs manage); SSE entitlement is checked **at subscribe time** —
+- **AuthN/AuthZ** - 8-step pipeline; Shield targets per data type
+  (L1 vs L2 vs manage); SSE entitlement is checked **at subscribe time** -
   subscribed clients keep frames until disconnect (no per-frame checks).
-- **Tenant + RLS** — every store path sets context then tx; engine state is
+- **Tenant + RLS** - every store path sets context then tx; engine state is
   env-scoped by boot (`TRADE8_FEED_ENV`); explicit env filters in SQL.
-- **Idempotency** — outbox rows carry idempotency keys (row ids); alert
+- **Idempotency** - outbox rows carry idempotency keys (row ids); alert
   persistence keyed by rule+trigger; feed-status upserts by (link, at).
-- **Audit journaling** — same-tx journal rows; admin mutations (links,
+- **Audit journaling** - same-tx journal rows; admin mutations (links,
   rules, acks) audited; Sys push with retry.
-- **Rate limiting / backpressure** — bounded mpsc from adapter to
+- **Rate limiting / backpressure** - bounded mpsc from adapter to
   normalizer (256 packets); SSE per-frame broadcast with `Lagged`
   tolerance (frames coalesce naturally); adapter restart backoff capped
   30s.
-- **Secrets/TLS** — `credentials_ref` secret references; post-quantum TLS;
+- **Secrets/TLS** - `credentials_ref` secret references; post-quantum TLS;
   M2M cert-bound workloads (`trade8:feed` relay/consumer, `-tls`).
 
 ## 6. Failure Modes & Recovery
@@ -276,17 +276,17 @@ flowchart TD
     I --> J[supervisor restarts after backoff]
     K[silence 5s] --> L[degraded status emitted]
     K -- 30s --> M[dead status emitted]
-    N[pool saturated] --> O[health loop retries next tick — never fatal]
+    N[pool saturated] --> O[health loop retries next tick - never fatal]
 ```
 
-- **Adapter crash/disconnect** — supervisor records status, restarts with
+- **Adapter crash/disconnect** - supervisor records status, restarts with
   exponential backoff (cap 30s); the gap shows on the health wall.
-- **Codec gaps** — unmatched records drop with a warn (never panic the
+- **Codec gaps** - unmatched records drop with a warn (never panic the
   engine); sequence gaps surface via the health status (retransmit where
   the protocol supports it).
-- **DB outage** — SSE fan-out continues (memory state), outbox rows retry
+- **DB outage** - SSE fan-out continues (memory state), outbox rows retry
   with the next packet's connection; alerts persist once the DB returns.
-- **SSE client lag** — dropped frames are client-resynced via snapshot
+- **SSE client lag** - dropped frames are client-resynced via snapshot
   refetch; the server keeps no per-client cursor.
 
 ## 7. Concurrency & Performance Model
@@ -318,7 +318,7 @@ graph LR
 1. Vendor bytes never pass the adapter boundary un-normalized; the engine
    API is packets-in, typed events-out.
 2. Consolidated BBO ≥ per-source extremes: best bid = max across sources,
-   best ask = min; sizes sum at the extremes (NBBO-style) — pinned by tests.
+   best ask = min; sizes sum at the extremes (NBBO-style) - pinned by tests.
 3. Alert rules match only on the last print; matching is total (no
    side effects; fired alerts persist before fan-out completes).
 4. Entitlement rejection is total-per-topic: a subscriber lacking
@@ -347,13 +347,13 @@ graph TD
 
 ## 10. Open Questions
 
-- **FIX-MD adapter production path** (currently sim-mapped) — which vendor
+- **FIX-MD adapter production path** (currently sim-mapped) - which vendor
   first, and whether the session rides the FIX codec crate.
 - **Symbol-directory auto-discovery** from vendor feeds vs admin-seeded
   mappings.
 - **Imbalance REST snapshot** endpoint (state normalized; endpoint not
   routed yet).
-- **Alert confirm-window semantics** (`window_ms`) — sustained-condition
+- **Alert confirm-window semantics** (`window_ms`) - sustained-condition
   logic currently matches single prints; the windowed evaluation needs
   product confirmation.
 - **Live intrabar/coalesced depth push** cadence for very active symbols

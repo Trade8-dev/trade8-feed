@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Feed
 // SPDX-License-Identifier: Apache-2.0
 
-//! Latency harness — Feed hot paths:
+//! Latency harness - Feed hot paths:
 //!   - Normalizer: ingest → events at 100k quotes/s sustained
 //!   - SSE fan-out: broadcast send < 1 ms at 100 subscribers
 //!

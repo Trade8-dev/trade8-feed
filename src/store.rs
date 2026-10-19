@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Feed
 // SPDX-License-Identifier: Apache-2.0
 
-//! Feed DB persistence — link/source bootstrap, alert rule
+//! Feed DB persistence - link/source bootstrap, alert rule
 //! CRUD, fired-alert persistence + `alert:fired` events (outbox-first).
 
 use sqlx::PgConnection;
@@ -227,7 +227,7 @@ pub async fn persist_feed_status(
     .await
 }
 
-/// Outbox insert — drained by the shell's boot-step-8b relay to Bus.
+/// Outbox insert - drained by the shell's boot-step-8b relay to Bus.
 pub async fn insert_outbox_event(
     conn: &mut PgConnection,
     env_id: Uuid,

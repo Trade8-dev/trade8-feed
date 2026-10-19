@@ -191,7 +191,7 @@ async fn bootstrap_links_respects_enable_flag() {
         .unwrap();
         tx.commit().await.unwrap();
     }
-    // bootstrap_links sets its own context (tx-local) — call in a tx (DESIGN.md §5).
+    // bootstrap_links sets its own context (tx-local) - call in a tx (DESIGN.md §5).
     let links = {
         let mut tx = conn.begin().await.unwrap();
         let v = store::bootstrap_links(&mut tx, env_a()).await;

@@ -59,7 +59,7 @@
         "tags": [
           "trade8-admin"
         ],
-        "summary": "Spec wrapper for the POST binding of `admin_ack_alert` — utoipa\nallows one served path per annotated fn, so the second binding gets\nits own.",
+        "summary": "Spec wrapper for the POST binding of `admin_ack_alert` - utoipa\nallows one served path per annotated fn, so the second binding gets\nits own.",
         "operationId": "admin_ack_alert_post",
         "responses": {
           "200": {
@@ -828,7 +828,7 @@
   "tags": [
     {
       "name": "feed",
-      "description": "Trade8:Feed — market data + alerts"
+      "description": "Trade8:Feed - market data + alerts"
     },
     {
       "name": "trade8-admin",

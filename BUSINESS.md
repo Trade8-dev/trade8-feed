@@ -1,4 +1,4 @@
-# Trade8:Feed — Business Requirements & Functionality
+# Trade8:Feed - Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating what
 > Trade8:Feed **does for the business**. For architecture read `README.md`;
@@ -7,12 +7,12 @@
 ## 1. Business Purpose
 
 - Put a single, clean, entitlement-gated **market-data stream** behind
-  every trader screen: live quotes, depth, prints, and auction imbalance —
+  every trader screen: live quotes, depth, prints, and auction imbalance -
   regardless of vendor wire format.
 - **Protect data entitlements** with the same authorization plane as
   orders: a subscriber without depth rights never receives level data.
 - Give traders **sub-second price alerts** with a simple declarative rule
-  format — and a path for tenants to author richer alert logic.
+  format - and a path for tenants to author richer alert logic.
 - Give trading systems trustworthy **anchors**: prints that drive chart
   bars, halt/uptick state for the risk gate, and reference prices for
   flatten operations.
@@ -23,7 +23,7 @@
 |---|---|
 | Vendor adapter framework | Pluggable adapters (ITCH, IDC, crypto WS, FIX-MD, sim) behind one trait |
 | Data normalization | All vendor packets → four internal event shapes (L1, L2, imbalance, print) |
-| Quote consolidation | Cross-source BBO merge (best bid/ask, sizes summed at extremes — NBBO-style) |
+| Quote consolidation | Cross-source BBO merge (best bid/ask, sizes summed at extremes - NBBO-style) |
 | Market-data streaming | Per-symbol SSE: snapshot frame + live frames with sequence numbers |
 | Snapshot APIs | Point-in-time L1/L2 reads for app cold start and service callers |
 | Price alerts | Declarative rules (>, <, ≥, ≤ thresholds) evaluated on prints; fired-alert inbox + acknowledge |
@@ -49,7 +49,7 @@
 |---|---|---|
 | Ingest | Multi-vendor adapters | Each link declares its protocol kind; adapters parse to one raw record shape |
 | Ingest | Simulated feeds | Recorded sessions replay deterministically for demos/tests |
-| Normalization | One event vocabulary | Four event types cover quotes, depth, imbalance, prints — consumers downstream need no vendor knowledge |
+| Normalization | One event vocabulary | Four event types cover quotes, depth, imbalance, prints - consumers downstream need no vendor knowledge |
 | Consolidation | NBBO-style best quote | Best bid across sources, best ask across sources; sizes summed at the extremes |
 | Streaming | Snapshot-then-live | A new subscriber gets the current snapshot first, then live frames with per-topic sequence numbers |
 | Streaming | Symbol-scoped delivery | A symbol's stream carries only that symbol's frames |
@@ -65,7 +65,7 @@
 | `trade8:feed:quote:updated` | A quote packet normalizes (per-source + consolidated state) |
 | `trade8:feed:depth:updated` | A level update normalizes |
 | `trade8:feed:imbalance:updated` | An auction imbalance snapshot normalizes |
-| `trade8:feed:trade:printed` | A consolidated print occurs — Bars's aggregation input |
+| `trade8:feed:trade:printed` | A consolidated print occurs - Bars's aggregation input |
 | `trade8:feed:alert:fired` | An alert rule matches |
 | `trade8:feed:feed:status` | A link's health state changes |
 
@@ -74,7 +74,7 @@
 
 ## 5. Business Rules & Invariants
 
-1. Every data frame leaving Feed is normalized — vendor formats never
+1. Every data frame leaving Feed is normalized - vendor formats never
    leak downstream.
 2. Consolidated quotes dominate per-source quotes: best bid/ask logic is
    deterministic and test-pinned.
@@ -83,7 +83,7 @@
    acks record who and when.
 5. Feed health transitions are evented, not just page-refreshed.
 6. Vendor credentials are stored only as secret references.
-7. Depth data requires its own entitlement — quote access is not implicit
+7. Depth data requires its own entitlement - quote access is not implicit
    depth access.
 
 ## 6. Target-User Roles & Use Cases
@@ -143,7 +143,7 @@
   (`window_ms` confirm) or remain instant-trigger?
 - Does the business need imbalance data in trader screens at launch (API
   exists; app surface pending)?
-- Market-data redistribution policies (per-office vs per-trader quotas) —
+- Market-data redistribution policies (per-office vs per-trader quotas) -
   enforced where: Shield attributes vs Feed throttles?
 
 ---

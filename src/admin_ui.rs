@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Feed
 // SPDX-License-Identifier: Apache-2.0
 
-//! Trade8:Feed admin UI — RFW pages + data endpoints.
+//! Trade8:Feed admin UI - RFW pages + data endpoints.
 
 use axum::extract::{Path, Query, State};
 use axum::http::HeaderMap;
@@ -69,7 +69,7 @@ fn card(title: &str, body: &str) -> RemoteWidget {
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/ui/{page}` — RFW definitions.
+/// `GET /v1/admin/ui/{page}` - RFW definitions.
 pub async fn get_admin_ui(
     State(_st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
@@ -149,7 +149,7 @@ type Qp = std::collections::HashMap<String, String>;
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/feeds` — link rows.
+/// `GET /v1/admin/feeds` - link rows.
 pub async fn admin_feeds(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
@@ -201,7 +201,7 @@ pub async fn admin_feeds(
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/sources` — quote source rows.
+/// `GET /v1/admin/sources` - quote source rows.
 pub async fn admin_sources(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
@@ -252,7 +252,7 @@ pub async fn admin_sources(
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/alerts` — fired alerts (latest first).
+/// `GET /v1/admin/alerts` - fired alerts (latest first).
 pub async fn admin_alerts(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,
@@ -322,7 +322,7 @@ pub async fn admin_alerts(
     tag = "trade8-admin",
 )]
 
-/// `POST /v1/admin/alerts/{id}/ack` — RFW POST-alias ack.
+/// `POST /v1/admin/alerts/{id}/ack` - RFW POST-alias ack.
 pub async fn admin_ack_alert(
     State(st): State<std::sync::Arc<FeedState>>,
     headers: HeaderMap,

@@ -5,7 +5,7 @@
 //! OpenAPI spec for Trade8:Feed.
 //!
 //! The routed handlers live in `main.rs` (binary crate); the spec describes
-//! them through spec-only wrappers (`crate::w`, same method + path — OAPEC
+//! them through spec-only wrappers (`crate::w`, same method + path - OAPEC
 //! §2). The shared Shield policy-admin surface is spec'd through the
 //! `sentin8::shell::policy_*` wrappers. The service exposes
 //! `GET /openapi.json` via the shell's OpenAPI route.
@@ -157,7 +157,7 @@ pub mod w {
     )]
     pub async fn admin_ack_alert() {}
 
-    /// Spec wrapper for the POST binding of `admin_ack_alert` — utoipa
+    /// Spec wrapper for the POST binding of `admin_ack_alert` - utoipa
     /// allows one served path per annotated fn, so the second binding gets
     /// its own.
     #[utoipa::path(
@@ -221,7 +221,7 @@ pub mod w {
     components(schemas()),
     security(),
     tags(
-        (name = "feed", description = "Trade8:Feed — market data + alerts"),
+        (name = "feed", description = "Trade8:Feed - market data + alerts"),
         (name = "trade8-admin", description = "Trade8 admin surface (RFW)"),
         (name = "policy", description = "Shield policy administration (shared surface)"),
     ),

@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Feed
 // SPDX-License-Identifier: Apache-2.0
 
-//! Trade8:Feed service binary — market data normalization + SSE fan-out.
+//! Trade8:Feed service binary - market data normalization + SSE fan-out.
 //!
 //! Design: `../feed/DESIGN.md`.
 //! Feed-link config bootstraps from the DB, adapters drive ingestion
@@ -101,7 +101,7 @@ fn extend_router(app: Router<Arc<FeedState>>, _state: Arc<FeedState>) -> Router<
             "/v1/health",
             // Carries the binary's build identity (`version`/`build`,
             // BUILDID-1) so captain's monitor populates `make status`'s
-            // VERSION column — the consuming BINARY's identity.
+            // VERSION column - the consuming BINARY's identity.
             get(|| async { Json(serde_json::json!({"status": "ok", "service": "trade8:feed", "version": sentin8::build_info::id(), "build": sentin8::build_info::build_hash()})) }),
         )
 }
@@ -282,12 +282,12 @@ async fn create_alert(
         .await
         .map_err(sentin8::shell::err_db)?;
     sentin8::shell::set_tenant_context(&mut conn, env).await;
-    // RLS context is transaction-local (DESIGN.md §5) —
+    // RLS context is transaction-local (DESIGN.md §5) -
     // begin() pins the tenant context to the SAME tx as the DML/reads.
     let mut tx = match conn.begin().await {
         Ok(t) => t,
         Err(e) => {
-            tracing::warn!(error = %e, "feed: tenant tx begin failed — retry next tick");
+            tracing::warn!(error = %e, "feed: tenant tx begin failed - retry next tick");
             return Err(sentin8::shell::err_db(e));
         }
     };
@@ -331,12 +331,12 @@ pub(crate) async fn list_feeds(
         .await
         .map_err(sentin8::shell::err_db)?;
     sentin8::shell::set_tenant_context(&mut conn, env).await;
-    // RLS context is transaction-local (DESIGN.md §5) —
+    // RLS context is transaction-local (DESIGN.md §5) -
     // begin() pins the tenant context to the SAME tx as the DML/reads.
     let mut tx = match conn.begin().await {
         Ok(t) => t,
         Err(e) => {
-            tracing::warn!(error = %e, "feed: tenant tx begin failed — retry next tick");
+            tracing::warn!(error = %e, "feed: tenant tx begin failed - retry next tick");
             return Err(sentin8::shell::err_db(e));
         }
     };
@@ -381,7 +381,7 @@ async fn run_link_supervisor(state: Arc<FeedState>, env_id: uuid::Uuid, link: st
     // Normalizer loop: raw → events → SSE + outbox (payload-
     // complete events for Risk/Bars/strategy consumers) + alerts.
     let mut backoff_ms = 250u64;
-    // Per-topic SSE sequence — monotonic per symbol.
+    // Per-topic SSE sequence - monotonic per symbol.
     let mut topic_seq: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
     while let Some(pkt) = rx.recv().await {
         let events = state.engine.ingest_packet(&pkt);
@@ -447,7 +447,7 @@ async fn run_link_supervisor(state: Arc<FeedState>, env_id: uuid::Uuid, link: st
                     "data": payload,
                 });
                 let _ = state.tx.send(format!("{topic}\u{1}{framed}"));
-                // Bus outbox event — same connection, per event.
+                // Bus outbox event - same connection, per event.
                 if let Some(c) = conn.as_mut() {
                     let _ = store::insert_outbox_event(c, env_id, event_type, payload).await;
                 }
@@ -471,13 +471,13 @@ async fn run_link_supervisor(state: Arc<FeedState>, env_id: uuid::Uuid, link: st
         backoff_ms = 250;
     }
     let _ = handle.await;
-    // Adapter ended — record feed status with backoff info.
+    // Adapter ended - record feed status with backoff info.
     if let Ok(mut conn) = state.core.pool.acquire().await {
         sentin8::shell::set_tenant_context(&mut conn, env_id).await;
-        // RLS context is transaction-local (DESIGN.md §5) —
+        // RLS context is transaction-local (DESIGN.md §5) -
         // begin() pins the tenant context to the SAME tx as the DML/reads.
         let Ok(mut tx) = conn.begin().await else {
-            tracing::warn!("feed: status tx begin failed — status record skipped");
+            tracing::warn!("feed: status tx begin failed - status record skipped");
             return;
         };
         let _ = store::persist_feed_status(
@@ -494,7 +494,7 @@ async fn run_link_supervisor(state: Arc<FeedState>, env_id: uuid::Uuid, link: st
 
 /// Feed health loop: periodic silence classification + `feed:status`
 /// events. A link whose engine seq stalls for > 5s while enabled is
-/// classified degraded; > 30s dead — both persist + emit so consumers
+/// classified degraded; > 30s dead - both persist + emit so consumers
 /// (Risk halt mirror, admin wall) see the transition.
 async fn health_loop(state: Arc<FeedState>, env_id: uuid::Uuid) {
     let mut last_seq_by_link: std::collections::HashMap<uuid::Uuid, (u64, std::time::Instant)> =
@@ -505,10 +505,10 @@ async fn health_loop(state: Arc<FeedState>, env_id: uuid::Uuid) {
             continue;
         };
         sentin8::shell::set_tenant_context(&mut conn, env_id).await;
-        // RLS context is transaction-local (DESIGN.md §5) —
+        // RLS context is transaction-local (DESIGN.md §5) -
         // begin() pins the tenant context to the SAME tx as the DML/reads.
         let Ok(mut tx) = conn.begin().await else {
-            tracing::warn!("feed: health tx begin failed — retry next tick");
+            tracing::warn!("feed: health tx begin failed - retry next tick");
             continue;
         };
         let links = store::bootstrap_links(&mut tx, env_id).await;
@@ -520,7 +520,7 @@ async fn health_loop(state: Arc<FeedState>, env_id: uuid::Uuid) {
                 .entry(link.link_id)
                 .or_insert((0, std::time::Instant::now()));
             // Classification by silence: no packet for 5s+ → degraded,
-            // 30s+ → dead (traffic resets via the normalizer's seq bump —
+            // 30s+ → dead (traffic resets via the normalizer's seq bump -
             // the engine's per-source seq is the liveness truth).
             let silent = entry.1.elapsed();
             let status = if silent.as_secs() >= 30 {
@@ -604,7 +604,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 // ---------------------------------------------------------------------------
-// Latency harness — feed hot paths. Generous CI-jitter headroom;
+// Latency harness - feed hot paths. Generous CI-jitter headroom;
 // tight numbers are measured by the release-mode sim-harness runs.
 // ---------------------------------------------------------------------------
 

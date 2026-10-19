@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Feed
 // SPDX-License-Identifier: Apache-2.0
 
-//! Feed engine — normalization, consolidation,
+//! Feed engine - normalization, consolidation,
 //! alert evaluation, snapshot reads.
 //!
 //! Design: `../feed/DESIGN.md` §4.
@@ -150,11 +150,11 @@ pub struct FeedEngine {
 }
 
 impl FeedEngine {
-    /// Normalize one raw packet into internal events — records the
+    /// Normalize one raw packet into internal events - records the
     /// state and returns the derived event set for the bus/SSE pass.
     pub fn ingest_packet(&self, pkt: &RawQuotePacket) -> Vec<TradeEvent> {
         let Ok(records) = parse_itch_record(pkt) else {
-            return vec![]; // codec gap — feed health event in the shell pass
+            return vec![]; // codec gap - feed health event in the shell pass
         };
         let mut out = Vec::new();
         for rec in records {
@@ -188,7 +188,7 @@ impl FeedEngine {
                     let mut symbols = self.symbols.write();
                     let state = symbols.entry(symbol.clone()).or_default();
                     // Per-source BBO: the consolidated quote is the
-                    // best bid (max) and best ask (min) across sources —
+                    // best bid (max) and best ask (min) across sources -
                     // semantics (NBBO-style).
                     state.l1_by_source.insert(source, q.clone());
                     let consolidated = state.consolidated_bbo();
@@ -467,7 +467,7 @@ mod tests {
         let _ = e.ingest_packet(&pkt(9, 2, s9b));
         let snap = e.quote_snapshot("AAPL").unwrap();
         // bid 100.10 = source9 (5) + source... wait source 7's bid is
-        // 100.00 — not at the extreme. bid at 100.10 is source 9 only → 7
+        // 100.00 - not at the extreme. bid at 100.10 is source 9 only → 7
         // (its own latest). ask 100.20: source 7 (10) + source 9 (3) = 13.
         assert_eq!(snap.bid_size, 7);
         assert_eq!(snap.ask_size, 13);
