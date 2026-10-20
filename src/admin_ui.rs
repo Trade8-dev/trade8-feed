@@ -132,9 +132,7 @@ pub async fn get_admin_ui(
             ))
         }
     };
-    Ok(Json(
-        AdminUiResponse::page(def)
-    ))
+    Ok(Json(AdminUiResponse::page(def)))
 }
 
 type Qp = std::collections::HashMap<String, String>;
@@ -179,16 +177,17 @@ pub async fn admin_feeds(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(rows
-        .into_iter()
-        .map(|(link_id, kind, name, quote_source_id, gtob, enable)| {
-            serde_json::json!({
-                "link_id": link_id, "kind": kind, "name": name,
-                "quote_source_id": quote_source_id,
-                "generate_top_of_book": gtob, "enable": enable,
+    Ok(Json(
+        rows.into_iter()
+            .map(|(link_id, kind, name, quote_source_id, gtob, enable)| {
+                serde_json::json!({
+                    "link_id": link_id, "kind": kind, "name": name,
+                    "quote_source_id": quote_source_id,
+                    "generate_top_of_book": gtob, "enable": enable,
+                })
             })
-        })
-        .collect::<Vec<_>>()))
+            .collect::<Vec<_>>(),
+    ))
 }
 #[utoipa::path(
     get,
@@ -231,15 +230,16 @@ pub async fn admin_sources(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(rows
-        .into_iter()
-        .map(|(name, display_name, is_book, create_tos)| {
-            serde_json::json!({
-                "name": name, "display_name": display_name,
-                "is_book": is_book, "create_tos": create_tos,
+    Ok(Json(
+        rows.into_iter()
+            .map(|(name, display_name, is_book, create_tos)| {
+                serde_json::json!({
+                    "name": name, "display_name": display_name,
+                    "is_book": is_book, "create_tos": create_tos,
+                })
             })
-        })
-        .collect::<Vec<_>>()))
+            .collect::<Vec<_>>(),
+    ))
 }
 #[utoipa::path(
     get,
@@ -298,18 +298,19 @@ pub async fn admin_alerts(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(rows
-        .into_iter()
-        .map(
-            |(alert_id, symbol_name, condition_text, usr_id, at, ack_by)| {
-                serde_json::json!({
-                    "alert_id": alert_id, "symbol_name": symbol_name,
-                    "condition_text": condition_text, "usr_id": usr_id,
-                    "at": at, "ack_by": ack_by,
-                })
-            }
-        )
-        .collect::<Vec<_>>()))
+    Ok(Json(
+        rows.into_iter()
+            .map(
+                |(alert_id, symbol_name, condition_text, usr_id, at, ack_by)| {
+                    serde_json::json!({
+                        "alert_id": alert_id, "symbol_name": symbol_name,
+                        "condition_text": condition_text, "usr_id": usr_id,
+                        "at": at, "ack_by": ack_by,
+                    })
+                },
+            )
+            .collect::<Vec<_>>(),
+    ))
 }
 #[utoipa::path(
     get,
@@ -350,8 +351,8 @@ pub async fn admin_ack_alert(
         .map_err(sentin8::shell::err_db)?;
     if ok {
         Ok(Json(AckResponse {
-        status: "acked".into(),
-    }))
+            status: "acked".into(),
+        }))
     } else {
         Err((
             axum::http::StatusCode::NOT_FOUND,

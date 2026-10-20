@@ -275,10 +275,12 @@ async fn create_alert(
     let env = auth.env_id();
     let symbol = body.symbol.as_str();
     let op = body.op.unwrap_or_else(|| "gt".into());
-    let threshold = body
-        .threshold_raw
-        .parse::<i64>()
-        .map_err(|_| (axum::http::StatusCode::BAD_REQUEST, "threshold_raw invalid".into()))?;
+    let threshold = body.threshold_raw.parse::<i64>().map_err(|_| {
+        (
+            axum::http::StatusCode::BAD_REQUEST,
+            "threshold_raw invalid".into(),
+        )
+    })?;
     let rule = core::AlertRule {
         rule_id: uuid::Uuid::now_v7(),
         usr_id: auth.claims.sub.clone(),
@@ -356,9 +358,7 @@ pub(crate) async fn list_feeds(
     };
     let links = store::bootstrap_links(&mut tx, env).await;
     tx.commit().await.ok(); // dropping an uncommitted tx rolls back
-    Ok(Json(FeedLinksResponse {
-        feeds: links,
-    }))
+    Ok(Json(FeedLinksResponse { feeds: links }))
 }
 
 /// The link-supervisor ingestion loop: per-link adapter task
