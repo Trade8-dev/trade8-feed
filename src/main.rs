@@ -101,7 +101,7 @@ fn extend_router(app: Router<Arc<FeedState>>, _state: Arc<FeedState>) -> Router<
         .route(
             "/v1/health",
             // Carries the binary's build identity (`version`/`build`,
-            // BUILDID-1) so captain's monitor populates `make status`'s
+            //) so captain's monitor populates `make status`'s
             // VERSION column - the consuming BINARY's identity.
             get(|| async { Json(serde_json::json!({"status": "ok", "service": "trade8:feed", "version": sentin8::build_info::id(), "build": sentin8::build_info::build_hash()})) }),
         )
@@ -619,10 +619,10 @@ async fn main() -> anyhow::Result<()> {
     .await
 }
 
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 // Latency harness - feed hot paths. Generous CI-jitter headroom;
 // tight numbers are measured by the release-mode sim-harness runs.
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 
 #[cfg(test)]
 mod latency {
@@ -689,11 +689,11 @@ impl sentin8::shield::admin::HasPolicyAdmin for FeedState {
     }
 }
 
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 // Admin POST-alias tests (test-architecture design §7): feed's
 // `/v1/admin/alerts/{id}/ack` alias rides the SAME handler as the GET
 // alias (idempotent ack contract) and inherits the verify+Shield gate.
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 #[cfg(test)]
 mod admin_alias_tests {
     use super::*;

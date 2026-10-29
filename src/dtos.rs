@@ -3,10 +3,10 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Feed
 // SPDX-License-Identifier: Apache-2.0
 
-//! Typed OpenAPI bodies (OAPEC-9). Shared between the spec module and the
+//! Typed OpenAPI bodies . Shared between the spec module and the
 //! binary handlers.
 
-/// Liveness/build identity (OAPEC-9 typed body).
+/// Liveness/build identity (typed body).
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct HealthInfo {
     /// Always `ok` while serving.
