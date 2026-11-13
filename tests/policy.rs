@@ -18,6 +18,8 @@
 //! against the live `sentin8_policy_sets` table) is covered by the shell
 //! boot path (refuse-to-start) and the workspace SQL suites.
 
+use trade8_feed_server::OPENAPI_DUMP;
+
 #[path = "../src/registration.rs"]
 #[allow(dead_code)]
 mod registration;
