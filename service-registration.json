@@ -6,7 +6,8 @@
       "telemetry_property": {
         "slug": "feed",
         "name": "Trade8:Feed Telemetry"
-      }
+      },
+      "exposure": "internal"
     }
   ]
 }
